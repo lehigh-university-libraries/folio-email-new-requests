@@ -105,7 +105,10 @@ def get_recipients(email_cfg: dict, service_point: str) -> list | None:
         recipients = (sp_cfg[service_point] or {}).get("recipients") or []
         if recipients:
             return recipients
-    return email_cfg.get("default_recipients") or None
+    default = email_cfg.get("default_recipients") or None
+    if default:
+        log.warning("No recipients configured for service point %r; using default_recipients", service_point)
+    return default
 
 
 def send_email(email_cfg: dict, recipients: list, subject: str, body: str) -> None:

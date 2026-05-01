@@ -1,0 +1,57 @@
+folio:
+  okapi_url: https://your-okapi.example.com
+  tenant: your_tenant
+  username: your_username
+  password: your_password
+
+email:
+  smtp_host: smtp.example.com
+  smtp_port: 587
+  use_tls: true
+  from_address: folio-requests@example.com
+  subject_template: "New FOLIO Requests – {service_point} ({count} new request{plural})"
+
+  # Credentials are optional — omit both for unauthenticated relay
+  smtp_username: sender@example.com
+  smtp_password: your_smtp_password
+
+  # Keys must match FOLIO pickupServicePoint.name exactly.
+  # Each entry lists the recipient email addresses for that service point.
+  service_points:
+    "Service Point One":
+      recipients:
+        - staff1@example.com
+    "Service Point Two":
+      recipients:
+        - staff2@example.com
+
+  # Fallback recipients used when a service point has no entry above.
+  # Remove or leave empty to treat unmapped service points as an error.
+  default_recipients:
+    - fallback@example.com
+
+# Fields to include per request in the email body, in this order.
+# Use camelCase dot-notation matching FOLIO JSON response paths.
+#
+# Available values:
+#   requestDate
+#   requester.barcode
+#   item.barcode
+#   instance.title
+#   item.callNumber
+#   requestType
+#   patronComments
+request_fields:
+  - requestDate
+  - requester.barcode
+  - item.barcode
+  - instance.title
+  - item.callNumber
+  - requestType
+  - patronComments
+
+# Path to the state file that tracks the last processed requestDate.
+state_file: state.json
+
+# Maximum number of requests to retrieve per FOLIO API call (pagination batch size).
+request_limit: 1000

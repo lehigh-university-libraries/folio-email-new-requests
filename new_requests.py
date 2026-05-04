@@ -63,7 +63,14 @@ def build_cql_query(last_date: str | None) -> str:
 
 def fetch_new_requests(fc: FolioClient, query: str, limit: int) -> list:
     log.info("Querying FOLIO: %s", query)
-    return list(fc.folio_get_all("/circulation/requests", key="requests", query=query, limit=limit))
+    return list(
+        fc.folio_get_all(
+            "/circulation/requests",
+            key="requests",
+            query=query,
+            limit=limit,
+        )
+    )
 
 
 def get_field_value(request: dict, dotted_path: str):
@@ -78,7 +85,9 @@ def get_field_value(request: dict, dotted_path: str):
 def group_by_service_point(requests: list) -> dict:
     groups: dict[str, list] = {}
     for req in requests:
-        service_point = get_field_value(req, "pickupServicePoint.name") or req.get("pickupServicePointId", "Unknown")
+        service_point = get_field_value(
+            req, "pickupServicePoint.name"
+        ) or req.get("pickupServicePointId", "Unknown")
         groups.setdefault(service_point, []).append(req)
     return groups
 
@@ -110,7 +119,10 @@ def get_recipients(email_cfg: dict, service_point: str) -> list | None:
             return recipients
     default = email_cfg.get("default_recipients") or None
     if default:
-        log.warning("No recipients configured for service point %r; using default_recipients", service_point)
+        log.warning(
+            "No recipients configured for service point %r; using default_recipients",
+            service_point,
+        )
     return default
 
 

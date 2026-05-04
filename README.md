@@ -105,13 +105,25 @@ Available fields:
 ```yaml
 state_file: state.json      # path to the run-state file (auto-created)
 request_limit: 1000         # FOLIO API pagination batch size
+
+# Only needed for --mode server
+server:
+  host: 127.0.0.1
+  port: 5000
 ```
 
 ## Usage
 
+The script supports two modes selected with `--mode`.
+
+### Once mode (default)
+
 ```
 python new_requests.py
+python new_requests.py --mode once
 ```
+
+Runs the check once and exits. Suitable for cron.
 
 **First run** — no `state.json` exists yet. The script processes every
 currently open "Not yet filled" request, sends emails, then writes `state.json`
@@ -121,6 +133,31 @@ with the most recent `requestDate` seen.
 `requestDate`, so each request is emailed exactly once.
 
 To reset and reprocess everything, delete `state.json`.
+
+### Server mode
+
+```
+python new_requests.py --mode server
+```
+
+Starts a Flask HTTP server. Send an empty `POST /check-requests` to trigger the
+same check-and-email cycle on demand:
+
+```
+curl -X POST http://127.0.0.1:5000/check-requests
+```
+
+Responses:
+
+| Status | Body | Meaning |
+|--------|------|---------|
+| 200 | `{"found": N}` | Check completed; N new requests processed |
+| 409 | `{"error": "check already in progress"}` | Previous check still running |
+| 500 | `{"error": "..."}` | FOLIO or email failure |
+
+If a check is already running when a second request arrives, the server returns
+`409` immediately rather than queuing a concurrent check that would race on
+`state.json`.
 
 ## Email format
 

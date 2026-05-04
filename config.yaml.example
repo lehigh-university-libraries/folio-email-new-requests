@@ -55,3 +55,8 @@ state_file: state.json
 
 # Maximum number of requests to retrieve per FOLIO API call (pagination batch size).
 request_limit: 1000
+
+# Only used with --mode server.
+server:
+  host: 127.0.0.1
+  port: 5000

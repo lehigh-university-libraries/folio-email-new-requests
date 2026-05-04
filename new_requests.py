@@ -85,9 +85,9 @@ def get_field_value(request: dict, dotted_path: str):
 def group_by_service_point(requests: list) -> dict:
     groups: dict[str, list] = {}
     for req in requests:
-        service_point = get_field_value(
-            req, "pickupServicePoint.name"
-        ) or req.get("pickupServicePointId", "Unknown")
+        service_point = get_field_value(req, "pickupServicePoint.name") or req.get(
+            "pickupServicePointId", "Unknown"
+        )
         groups.setdefault(service_point, []).append(req)
     return groups
 
@@ -106,7 +106,7 @@ def format_request_block(request: dict, fields: list) -> str:
 def build_email_body(service_point: str, requests: list, fields: list) -> str:
     count = len(requests)
     noun = "request" if count == 1 else "requests"
-    header = f'{count} new “Open – Not yet filled” {noun} for {service_point}.\n'
+    header = f"{count} new “Open – Not yet filled” {noun} for {service_point}.\n"
     blocks = [DIVIDER + "\n" + format_request_block(r, fields) for r in requests]
     return header + "\n" + "\n".join(blocks) + "\n" + DIVIDER
 
@@ -155,7 +155,9 @@ def connect_folio(folio_cfg: dict) -> FolioClient:
     )
 
 
-def get_new_requests(fc: FolioClient, cfg: dict, last_date: str | None) -> tuple[list, str]:
+def get_new_requests(
+    fc: FolioClient, cfg: dict, last_date: str | None
+) -> tuple[list, str]:
     query = build_cql_query(last_date)
     limit = cfg.get("request_limit", 1000)
     requests = fetch_new_requests(fc, query, limit)

@@ -187,6 +187,25 @@ Request Type:      Hold
 One email is sent per service point that has new requests. If a service point
 has no new requests, no email is sent for it.
 
+## Docker
+
+1. Clone this repo.
+2. Copy `config.yaml.example` to `config.yaml` and fill in your values.
+3. Start the server:
+
+```
+git clone https://github.com/lehigh-university-libraries/folio-email-new-requests
+cd folio-email-new-requests
+# cp config.yaml.example config.yaml
+# edit config.yaml
+docker run \
+  -v ./:/app \
+  -p 5000:5000 \
+  --rm \
+  --name folio-email-new-requests \
+  ghcr.io/lehigh-university-libraries/folio-email-new-requests:main
+```
+
 ## Scheduling with cron
 
 Run every 15 minutes:

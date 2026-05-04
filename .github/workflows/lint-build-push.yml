@@ -1,0 +1,38 @@
+name: lint-build-push
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - "**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          verbose: true
+
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+
+  build-push:
+    needs: [lint]
+    uses: lehigh-university-libraries/gha/.github/workflows/build-push-ghcr.yaml@main
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit

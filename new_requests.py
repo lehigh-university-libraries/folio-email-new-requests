@@ -1,14 +1,11 @@
-import argparse
 import json
 import logging
 import smtplib
 import sys
-import threading
 from email.mime.text import MIMEText
 from pathlib import Path
 
 import yaml
-from flask import Flask, jsonify
 from folioclient import FolioClient
 
 logging.basicConfig(
@@ -235,54 +232,11 @@ def run_check(cfg: dict) -> tuple[bool, int]:
         return False, len(requests)
 
 
-def run_once(cfg: dict) -> None:
+def main() -> None:
+    cfg = load_config("config.yaml")
     success, _ = run_check(cfg)
     if not success:
         sys.exit(1)
-
-
-def run_server(cfg: dict) -> None:
-    app = Flask(__name__)
-    lock = threading.Lock()
-
-    @app.post("/check-requests")
-    def check_requests():
-        if not lock.acquire(blocking=False):
-            return jsonify({"error": "check already in progress"}), 409
-        try:
-            success, found = run_check(cfg)
-            if not success:
-                return jsonify({"error": "one or more emails failed"}), 500
-            return jsonify({"found": found})
-        except Exception as exc:
-            log.exception("Unhandled error during check")
-            return jsonify({"error": str(exc)}), 500
-        finally:
-            lock.release()
-
-    server_cfg = cfg.get("server") or {}
-    host = server_cfg.get("host", "127.0.0.1")
-    port = server_cfg.get("port", 5000)
-    log.info("Starting server on %s:%s", host, port)
-    app.run(host=host, port=port)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Email new FOLIO circulation requests")
-    parser.add_argument(
-        "--mode",
-        choices=["once", "server"],
-        default="once",
-        help="once: run and exit (default); server: start Flask listener",
-    )
-    args = parser.parse_args()
-
-    cfg = load_config("config.yaml")
-
-    if args.mode == "server":
-        run_server(cfg)
-    else:
-        run_once(cfg)
 
 
 if __name__ == "__main__":

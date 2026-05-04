@@ -10,4 +10,4 @@ RUN uv pip install \
 
 COPY . /app
 
-CMD ["python", "new_requests.py", "--mode", "server"]
+CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:5000"]

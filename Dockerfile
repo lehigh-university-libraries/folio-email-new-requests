@@ -10,4 +10,5 @@ RUN uv pip install \
 
 COPY . /app
 
-ENV FLASK_APP=application:app
+ENV FLASK_APP=application:app \
+    HOME=/tmp

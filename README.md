@@ -184,7 +184,7 @@ git clone https://github.com/lehigh-university-libraries/folio-email-new-request
 cd folio-email-new-requests
 # cp config.yaml.example config.yaml
 # edit config.yaml
-docker run \
+MSYS_NO_PATHCONV=1 docker run \
   -v ./:/app \
   -p 5000:5000 \
   --rm \

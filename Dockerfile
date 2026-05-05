@@ -9,3 +9,5 @@ RUN uv pip install \
    -r /app/requirements.txt
 
 COPY . /app
+
+ENV FLASK_APP=application:app

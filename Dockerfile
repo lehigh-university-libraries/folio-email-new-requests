@@ -1,4 +1,4 @@
-FROM ghcr.io/lehigh-university-libraries/python3.13:main@sha256:86a892c3801acc5a7ec579722a118f64cb2e396115b34be697f90a417878272f
+FROM ghcr.io/lehigh-university-libraries/python3.13:main@sha256:310b999ea1fc7c58cd2da9ca8290602ccfa30e06e6d605a4cfd0fdd17c4f5490
 
 WORKDIR /app
 
@@ -11,4 +11,5 @@ RUN uv pip install \
 COPY . /app
 
 ENV FLASK_APP=application:app \
-    HOME=/tmp
+    HOME=/tmp \
+    PORT=5000

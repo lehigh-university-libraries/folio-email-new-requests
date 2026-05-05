@@ -1,14 +1,11 @@
-import argparse
 import json
 import logging
 import smtplib
 import sys
-import threading
 from email.mime.text import MIMEText
 from pathlib import Path
 
 import yaml
-from flask import Flask, jsonify
 from folioclient import FolioClient
 
 logging.basicConfig(
@@ -33,11 +30,17 @@ DIVIDER = "─" * 46
 
 def load_config(path: str) -> dict:
     config_path = Path(path)
-    if not config_path.exists():
-        log.error("Config file not found: %s", path)
+    if not config_path.is_absolute():
+        config_path = Path(__file__).parent / path
+    try:
+        with config_path.open(encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        log.error("Config file not found: %s", config_path)
         sys.exit(1)
-    with config_path.open(encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    except PermissionError:
+        log.error("Permission denied reading config: %s", config_path)
+        sys.exit(1)
 
 
 def load_state(path: str) -> str | None:
@@ -63,7 +66,14 @@ def build_cql_query(last_date: str | None) -> str:
 
 def fetch_new_requests(fc: FolioClient, query: str, limit: int) -> list:
     log.info("Querying FOLIO: %s", query)
-    return list(fc.folio_get_all("/circulation/requests", key="requests", query=query, limit=limit))
+    return list(
+        fc.folio_get_all(
+            "/circulation/requests",
+            key="requests",
+            query=query,
+            limit=limit,
+        )
+    )
 
 
 def get_field_value(request: dict, dotted_path: str):
@@ -78,7 +88,9 @@ def get_field_value(request: dict, dotted_path: str):
 def group_by_service_point(requests: list) -> dict:
     groups: dict[str, list] = {}
     for req in requests:
-        service_point = get_field_value(req, "pickupServicePoint.name") or req.get("pickupServicePointId", "Unknown")
+        service_point = get_field_value(req, "pickupServicePoint.name") or req.get(
+            "pickupServicePointId", "Unknown"
+        )
         groups.setdefault(service_point, []).append(req)
     return groups
 
@@ -97,7 +109,7 @@ def format_request_block(request: dict, fields: list) -> str:
 def build_email_body(service_point: str, requests: list, fields: list) -> str:
     count = len(requests)
     noun = "request" if count == 1 else "requests"
-    header = f'{count} new “Open – Not yet filled” {noun} for {service_point}.\n'
+    header = f"{count} new “Open – Not yet filled” {noun} for {service_point}.\n"
     blocks = [DIVIDER + "\n" + format_request_block(r, fields) for r in requests]
     return header + "\n" + "\n".join(blocks) + "\n" + DIVIDER
 
@@ -110,7 +122,10 @@ def get_recipients(email_cfg: dict, service_point: str) -> list | None:
             return recipients
     default = email_cfg.get("default_recipients") or None
     if default:
-        log.warning("No recipients configured for service point %r; using default_recipients", service_point)
+        log.warning(
+            "No recipients configured for service point %r; using default_recipients",
+            service_point,
+        )
     return default
 
 
@@ -143,7 +158,9 @@ def connect_folio(folio_cfg: dict) -> FolioClient:
     )
 
 
-def get_new_requests(fc: FolioClient, cfg: dict, last_date: str | None) -> tuple[list, str]:
+def get_new_requests(
+    fc: FolioClient, cfg: dict, last_date: str | None
+) -> tuple[list, str]:
     query = build_cql_query(last_date)
     limit = cfg.get("request_limit", 1000)
     requests = fetch_new_requests(fc, query, limit)
@@ -221,54 +238,11 @@ def run_check(cfg: dict) -> tuple[bool, int]:
         return False, len(requests)
 
 
-def run_once(cfg: dict) -> None:
+def main() -> None:
+    cfg = load_config("config.yaml")
     success, _ = run_check(cfg)
     if not success:
         sys.exit(1)
-
-
-def run_server(cfg: dict) -> None:
-    app = Flask(__name__)
-    lock = threading.Lock()
-
-    @app.post("/check-requests")
-    def check_requests():
-        if not lock.acquire(blocking=False):
-            return jsonify({"error": "check already in progress"}), 409
-        try:
-            success, found = run_check(cfg)
-            if not success:
-                return jsonify({"error": "one or more emails failed"}), 500
-            return jsonify({"found": found})
-        except Exception as exc:
-            log.exception("Unhandled error during check")
-            return jsonify({"error": str(exc)}), 500
-        finally:
-            lock.release()
-
-    server_cfg = cfg.get("server") or {}
-    host = server_cfg.get("host", "127.0.0.1")
-    port = server_cfg.get("port", 5000)
-    log.info("Starting server on %s:%s", host, port)
-    app.run(host=host, port=port)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Email new FOLIO circulation requests")
-    parser.add_argument(
-        "--mode",
-        choices=["once", "server"],
-        default="once",
-        help="once: run and exit (default); server: start Flask listener",
-    )
-    args = parser.parse_args()
-
-    cfg = load_config("config.yaml")
-
-    if args.mode == "server":
-        run_server(cfg)
-    else:
-        run_once(cfg)
 
 
 if __name__ == "__main__":

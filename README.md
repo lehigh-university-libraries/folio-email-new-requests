@@ -105,22 +105,12 @@ Available fields:
 ```yaml
 state_file: state.json      # path to the run-state file (auto-created)
 request_limit: 1000         # FOLIO API pagination batch size
-
-# Only needed for --mode server
-server:
-  host: 127.0.0.1
-  port: 5000
 ```
 
 ## Usage
 
-The script supports two modes selected with `--mode`.
-
-### Once mode (default)
-
 ```
 python new_requests.py
-python new_requests.py --mode once
 ```
 
 Runs the check once and exits. Suitable for cron.
@@ -134,13 +124,9 @@ with the most recent `requestDate` seen.
 
 To reset and reprocess everything, delete `state.json`.
 
-### Server mode
+## Server mode
 
-```
-python new_requests.py --mode server
-```
-
-Starts a Flask HTTP server. Send an empty `POST /check-requests` to trigger the
+The Docker image runs a gunicorn HTTP server. Send an empty `POST /check-requests` to trigger the
 same check-and-email cycle on demand:
 
 ```
@@ -186,6 +172,25 @@ Request Type:      Hold
 
 One email is sent per service point that has new requests. If a service point
 has no new requests, no email is sent for it.
+
+## Docker
+
+1. Clone this repo.
+2. Copy `config.yaml.example` to `config.yaml` and fill in your values.
+3. Start the server:
+
+```
+git clone https://github.com/lehigh-university-libraries/folio-email-new-requests
+cd folio-email-new-requests
+# cp config.yaml.example config.yaml
+# edit config.yaml
+MSYS_NO_PATHCONV=1 docker run \
+  -v ./:/app \
+  -p 5000:5000 \
+  --rm \
+  --name folio-email-new-requests \
+  ghcr.io/lehigh-university-libraries/folio-email-new-requests:main
+```
 
 ## Scheduling with cron
 

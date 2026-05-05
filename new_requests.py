@@ -32,11 +32,15 @@ def load_config(path: str) -> dict:
     config_path = Path(path)
     if not config_path.is_absolute():
         config_path = Path(__file__).parent / path
-    if not config_path.exists():
-        log.error("Config file not found: %s", path)
+    try:
+        with config_path.open(encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        log.error("Config file not found: %s", config_path)
         sys.exit(1)
-    with config_path.open(encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    except PermissionError:
+        log.error("Permission denied reading config: %s", config_path)
+        sys.exit(1)
 
 
 def load_state(path: str) -> str | None:

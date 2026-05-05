@@ -10,4 +10,4 @@ RUN uv pip install \
 
 COPY . /app
 
-CMD ["gunicorn", "application:app", "--bind", "0.0.0.0:5000"]
+CMD ["gunicorn", "application:app", "--bind", "0.0.0.0:5000", "--chdir", "/app"]

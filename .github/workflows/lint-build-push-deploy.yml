@@ -37,7 +37,7 @@ jobs:
       packages: write
     secrets: inherit
 
-deploy:
+  deploy:
     needs: [build-push]
     uses: lehigh-university-libraries/gha/.github/workflows/linderman-deploy.yaml@main
     with:

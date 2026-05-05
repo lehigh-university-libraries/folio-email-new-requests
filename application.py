@@ -26,3 +26,8 @@ def check_requests():
         return jsonify({"error": str(exc)}), 500
     finally:
         lock.release()
+
+
+@app.route("/healthcheck")
+def healthcheck():
+    return "OK"

@@ -9,5 +9,3 @@ RUN uv pip install \
    -r /app/requirements.txt
 
 COPY . /app
-
-CMD ["gunicorn", "application:app", "--bind", "0.0.0.0:5000", "--chdir", "/app"]

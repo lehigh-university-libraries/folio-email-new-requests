@@ -30,6 +30,8 @@ DIVIDER = "─" * 46
 
 def load_config(path: str) -> dict:
     config_path = Path(path)
+    if not config_path.is_absolute():
+        config_path = Path(__file__).parent / path
     if not config_path.exists():
         log.error("Config file not found: %s", path)
         sys.exit(1)

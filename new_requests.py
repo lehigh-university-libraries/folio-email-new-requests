@@ -16,12 +16,14 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 FIELD_LABELS = {
+    "instance.title": "Title",
+    "item.effectiveLocationName": "Item Location",
+    "item.callNumber": "Call Number",
+    "item.barcode": "Item Barcode",
+    "requestType": "Request Type",
     "requestDate": "Request Date",
     "requester.barcode": "Patron Barcode",
-    "item.barcode": "Item Barcode",
-    "instance.title": "Title",
-    "item.callNumber": "Call Number",
-    "requestType": "Request Type",
+    "pickupServicePoint.name": "Pickup Service Point",
     "patronComments": "Comments",
 }
 

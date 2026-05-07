@@ -1,8 +1,39 @@
 # folio-email-new-requests
 
 Polls FOLIO for new "Open – Not yet filled" circulation requests and emails
-configured staff lists, grouped by pickup service point. Designed to run on a
-cron schedule.
+configured staff lists, grouped by pickup service point. 
+
+Runs either as a
+CLI script (invoked directly or via cron) or as a persistent HTTP server
+(via Docker) that can be triggered by cron or on demand by a discovery layer.
+
+## Email format
+
+```
+Subject: New FOLIO Requests – Linderman (3 new requests)
+
+3 new "Open – Not yet filled" requests for Linderman.
+
+──────────────────────────────────────────────
+Request Date:      2026-04-30T14:23:11.000+00:00
+Patron Barcode:    12345678
+Item Barcode:      39151008775948
+Title:             Burning for the Buddha
+Call Number:       294.343 B469b
+Request Type:      Page
+Comments:          Please hold at front desk
+──────────────────────────────────────────────
+Request Date:      2026-04-30T15:01:44.000+00:00
+Patron Barcode:    98765432
+Item Barcode:      39151008776111
+Title:             Introduction to Library Science
+Call Number:       Z665 .I58
+Request Type:      Hold
+──────────────────────────────────────────────
+```
+
+One email is sent per service point that has new requests. If a service point
+has no new requests, no email is sent for it.
 
 ## Requirements
 
@@ -18,7 +49,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Copy `config.yaml` and fill in your values before the first run.
+Copy `config.yaml.example` to `config.yaml` and fill in your values before the first run.
 
 ### FOLIO connection
 
@@ -109,11 +140,7 @@ request_limit: 1000         # FOLIO API pagination batch size
 
 ## Usage
 
-```
-python new_requests.py
-```
-
-Runs the check once and exits. Suitable for cron.
+The script supports two deployment modes. Both track state the same way:
 
 **First run** — no `state.json` exists yet. The script processes every
 currently open "Not yet filled" request, sends emails, then writes `state.json`
@@ -124,16 +151,31 @@ with the most recent `requestDate` seen.
 
 To reset and reprocess everything, delete `state.json`.
 
-## Server mode
+### CLI mode
 
-The Docker image runs a gunicorn HTTP server. Send an empty `POST /check-requests` to trigger the
-same check-and-email cycle on demand:
+```
+python new_requests.py
+```
+
+Runs the check once and exits.
+
+Schedule with cron to run every 15 minutes:
+
+```
+*/15 * * * * cd /path/to/folio-email-new-requests && python new_requests.py >> /var/log/folio-new-requests.log 2>&1
+```
+
+The script logs to stdout/stderr with timestamps and exits with a non-zero code
+on failure, which cron-monitoring tools can detect.
+
+### Server mode
+
+The Docker image runs a persistent gunicorn HTTP server. Send an empty
+`POST /check-requests` to trigger the same check-and-email cycle:
 
 ```
 curl -X POST http://127.0.0.1:5000/check-requests
 ```
-
-Responses:
 
 | Status | Body | Meaning |
 |--------|------|---------|
@@ -145,64 +187,34 @@ If a check is already running when a second request arrives, the server returns
 `409` immediately rather than queuing a concurrent check that would race on
 `state.json`.
 
-## Email format
+**Cron** — schedule the endpoint call instead of the script:
 
 ```
-Subject: New FOLIO Requests – Linderman (3 new requests)
-
-3 new "Open – Not yet filled" requests for Linderman.
-
-──────────────────────────────────────────────
-Request Date:      2026-04-30T14:23:11.000+00:00
-Patron Barcode:    12345678
-Item Barcode:      39151008775948
-Title:             Burning for the Buddha
-Call Number:       294.343 B469b
-Request Type:      Page
-Comments:          Please hold at front desk
-──────────────────────────────────────────────
-Request Date:      2026-04-30T15:01:44.000+00:00
-Patron Barcode:    98765432
-Item Barcode:      39151008776111
-Title:             Introduction to Library Science
-Call Number:       Z665 .I58
-Request Type:      Hold
-──────────────────────────────────────────────
+*/15 * * * * curl -sf -X POST http://127.0.0.1:5000/check-requests
 ```
 
-One email is sent per service point that has new requests. If a service point
-has no new requests, no email is sent for it.
+**On-demand** — a discovery layer or ILS integration can POST to the endpoint
+immediately after a patron submits a request, triggering a check without waiting
+for the next cron interval.
 
 ## Docker
 
 1. Clone this repo.
 2. Copy `config.yaml.example` to `config.yaml` and fill in your values.
-3. Start the server:
+3. Start the server (on Git Bash for Windows, prefix the `docker run` command with `MSYS_NO_PATHCONV=1`):
 
 ```
 git clone https://github.com/lehigh-university-libraries/folio-email-new-requests
 cd folio-email-new-requests
 # cp config.yaml.example config.yaml
 # edit config.yaml
-MSYS_NO_PATHCONV=1 docker run \
+docker run \
   -v ./:/app \
   -p 5000:5000 \
   --rm \
   --name folio-email-new-requests \
   ghcr.io/lehigh-university-libraries/folio-email-new-requests:main
 ```
-
-## Scheduling with cron
-
-Run every 15 minutes:
-
-```
-*/15 * * * * cd /path/to/folio-email-new-requests && python new_requests.py >> /var/log/folio-new-requests.log 2>&1
-```
-
-The script logs to stdout/stderr with timestamps, making it suitable for
-redirection to a log file. It exits with a non-zero code on FOLIO authentication
-failure or missing config, which cron-monitoring tools can detect.
 
 ## State file
 

@@ -49,72 +49,13 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Copy `config.yaml.example` to `config.yaml` and fill in your values before the first run.
+Copy `config.yaml.example` to `config.yaml` and fill in your values. The example
+file is fully commented and covers:
 
-### FOLIO connection
-
-```yaml
-folio:
-  okapi_url: https://your-folio-api.example.com
-  tenant: your_tenant
-  username: admin
-  password: secret
-```
-
-The FOLIO user must have the **Requests: View** permission.
-
-### Email
-
-```yaml
-email:
-  smtp_host: smtp.example.com
-  smtp_port: 587
-  use_tls: true
-  smtp_username: sender@example.com
-  smtp_password: secret
-  from_address: folio-requests@example.com
-  subject_template: "New FOLIO Requests – {service_point} ({count} new request{plural})"
-```
-
-The `subject_template` supports three placeholders: `{service_point}`,
-`{count}`, and `{plural}` (empty string for 1, `s` otherwise).
-
-### Recipient lists
-
-Keys under `service_points` must match the `pickupServicePoint.name`
-value returned by FOLIO exactly (check a live request record if unsure).
-
-```yaml
-email:
-  service_points:
-    "Linderman":
-      recipients:
-        - staff1@example.com
-        - staff2@example.com
-    "Fairchild-Martindale":
-      recipients:
-        - staff3@example.com
-
-  default_recipients:
-    - fallback@example.com
-```
-
-If a service point is not listed under `service_points`, the script falls back
-to `default_recipients`. If neither is configured for a given service point,
-the script logs an error and skips that group.
-
-### Request fields
-
-Controls which fields appear in each email block and in what order. Omit this
-section to include all available fields. The full list is documented in
-`config.yaml.example`.
-
-### Other settings
-
-```yaml
-state_file: state.json      # path to the run-state file (auto-created)
-request_limit: 1000         # FOLIO API pagination batch size
-```
+- **FOLIO connection** — Okapi URL, tenant, and credentials
+- **Email** — SMTP settings, subject template, and per-service-point recipient lists
+- **Request fields** — which fields appear in each email block and in what order
+- **Other settings** — state file path and API pagination batch size
 
 ## Usage
 

@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 FIELD_LABELS = {
     "instance.title": "Title",
-    "item.effectiveLocationName": "Item Location",
+    "item.itemEffectiveLocationName": "Item Location",
     "item.callNumber": "Call Number",
     "item.barcode": "Item Barcode",
     "requestType": "Request Type",

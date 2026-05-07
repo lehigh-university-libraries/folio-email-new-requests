@@ -31,24 +31,19 @@ email:
     - fallback@example.com
 
 # Fields to include per request in the email body, in this order.
-# Use camelCase dot-notation matching FOLIO JSON response paths.
+# Omit this section entirely to include all fields.
+# Uncomment and reorder to customize.
 #
-# Available values:
-#   requestDate
-#   requester.barcode
-#   item.barcode
-#   instance.title
-#   item.callNumber
-#   requestType
-#   patronComments
-request_fields:
-  - requestDate
-  - requester.barcode
-  - item.barcode
-  - instance.title
-  - item.callNumber
-  - requestType
-  - patronComments
+# request_fields:
+#   - instance.title
+#   - item.itemEffectiveLocationName
+#   - item.callNumber
+#   - item.barcode
+#   - requestType
+#   - requestDate
+#   - requester.barcode
+#   - pickupServicePoint.name
+#   - patronComments
 
 # Path to the state file that tracks the last processed requestDate.
 state_file: state.json

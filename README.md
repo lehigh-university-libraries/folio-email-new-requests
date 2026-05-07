@@ -105,31 +105,9 @@ the script logs an error and skips that group.
 
 ### Request fields
 
-Controls which fields appear in each email block and in what order. Values are
-camelCase dot-paths matching the FOLIO JSON response.
-
-```yaml
-request_fields:
-  - requestDate
-  - requester.barcode
-  - item.barcode
-  - instance.title
-  - item.callNumber
-  - requestType
-  - patronComments
-```
-
-Available fields:
-
-| Config value | Description |
-|---|---|
-| `requestDate` | Date and time the request was placed |
-| `requester.barcode` | Patron barcode |
-| `item.barcode` | Item barcode |
-| `instance.title` | Title of the requested instance |
-| `item.callNumber` | Call number |
-| `requestType` | Hold, Page, or Recall |
-| `patronComments` | Patron-supplied comments (omitted from email when empty) |
+Controls which fields appear in each email block and in what order. Omit this
+section to include all available fields. The full list is documented in
+`config.yaml.example`.
 
 ### Other settings
 

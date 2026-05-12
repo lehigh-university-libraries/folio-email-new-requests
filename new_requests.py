@@ -20,6 +20,7 @@ FIELD_LABELS = {
     "item.itemEffectiveLocationName": "Item Location",
     "item.callNumber": "Call Number",
     "item.barcode": "Item Barcode",
+    "item.retrievalServicePointName": "Retrieval Service Point",
     "requestType": "Request Type",
     "requestDate": "Request Date",
     "requester.barcode": "Patron Barcode",
@@ -90,9 +91,13 @@ def get_field_value(request: dict, dotted_path: str):
 def group_by_service_point(requests: list) -> dict:
     groups: dict[str, list] = {}
     for req in requests:
-        service_point = get_field_value(req, "pickupServicePoint.name") or req.get(
-            "pickupServicePointId", "Unknown"
-        )
+        service_point = get_field_value(req, "item.retrievalServicePointName")
+        if not service_point:
+            log.warning(
+                "Request %s has no retrievalServicePointName; grouping as 'Unknown'",
+                req.get("id", "?"),
+            )
+            service_point = "Unknown"
         groups.setdefault(service_point, []).append(req)
     return groups
 

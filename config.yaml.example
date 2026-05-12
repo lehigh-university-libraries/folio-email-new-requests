@@ -21,7 +21,8 @@ email:
   smtp_username: sender@example.com
   smtp_password: your_smtp_password
 
-  # Keys must match FOLIO pickupServicePoint.name exactly.
+  # Keys must match FOLIO item.retrievalServicePointName exactly — the service
+  # point for the item's effective location.
   # Check a live request record in FOLIO if unsure of the exact value.
   # Each entry lists the recipient addresses for that service point.
   service_points:

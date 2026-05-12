@@ -1,7 +1,7 @@
 # folio-email-new-requests
 
 Polls FOLIO for new "Open – Not yet filled" circulation requests and emails
-configured staff lists, grouped by pickup service point. 
+configured staff lists, grouped by the retrieval service point for each item's location.
 
 Runs either as a
 CLI script (invoked directly or via cron) or as a persistent HTTP server

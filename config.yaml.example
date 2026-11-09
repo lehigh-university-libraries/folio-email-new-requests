@@ -40,6 +40,15 @@ email:
   default_recipients:
     - fallback@example.com
 
+# Request types to include. Valid values: Page, Hold, Recall.
+# Omit this section entirely to include all request types.
+# Uncomment and edit to customize.
+#
+# request_types:
+#   - Page
+#   - Hold
+#   - Recall
+
 # Fields to include per request in the email body, in this order.
 # Omit this section entirely to include all fields.
 # Uncomment and reorder to customize.

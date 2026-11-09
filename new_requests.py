@@ -28,6 +28,8 @@ FIELD_LABELS = {
     "patronComments": "Comments",
 }
 
+REQUEST_TYPES = ("Page", "Hold", "Recall")
+
 DIVIDER = "─" * 46
 
 
@@ -60,8 +62,23 @@ def save_state(path: str, date_str: str) -> None:
         json.dump({"last_request_date": date_str}, f)
 
 
-def build_cql_query(last_date: str | None) -> str:
+def get_request_types(cfg: dict) -> list:
+    request_types = cfg.get("request_types") or []
+    if isinstance(request_types, str):
+        request_types = [request_types]
+    invalid = [t for t in request_types if t not in REQUEST_TYPES]
+    if invalid:
+        raise ValueError(
+            f"Invalid request_types {invalid}; must be one or more of {list(REQUEST_TYPES)}"
+        )
+    return request_types
+
+
+def build_cql_query(last_date: str | None, request_types: list | None = None) -> str:
     base = 'status=="Open - Not yet filled"'
+    if request_types:
+        types_clause = " OR ".join(f'requestType=="{t}"' for t in request_types)
+        base = f"{base} AND ({types_clause})"
     if last_date:
         base = f'{base} AND requestDate > "{last_date}"'
     return f"({base}) sortby requestDate"
@@ -168,7 +185,7 @@ def connect_folio(folio_cfg: dict) -> FolioClient:
 def get_new_requests(
     fc: FolioClient, cfg: dict, last_date: str | None
 ) -> tuple[list, str]:
-    query = build_cql_query(last_date)
+    query = build_cql_query(last_date, get_request_types(cfg))
     limit = cfg.get("request_limit", 1000)
     requests = fetch_new_requests(fc, query, limit)
     if not requests:

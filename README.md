@@ -54,6 +54,7 @@ file is fully commented and covers:
 
 - **FOLIO connection** — Okapi URL, tenant, and credentials
 - **Email** — SMTP settings, subject template, and per-service-point recipient lists
+- **Request types** — which request types (Page, Hold, Recall) to query for
 - **Request fields** — which fields appear in each email block and in what order
 - **Other settings** — state file path and API pagination batch size
 
